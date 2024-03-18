@@ -1,0 +1,311 @@
+---
+title: "Assignment_4"
+author: "Surya vamshidhar Buneeti"
+date: "2023-11-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+***
+Summary:
+
+1.Missing Values Check: determining the percentage of missing values in each column of our dataset. 
+
+•	Normalization: Using the scale function to normalize the data. Variables on the same scale are required for K-Means clustering. 
+
+•	Finding Optimal K: Using the Elbow technique (wss) and the Silhouette approach, determine the optimal number of clusters. Whereas the ideal k value for the wss method is k = 2, the optimal k value for the Silhouette approach is k = 5.
+
+2.K-Means Clustering:
+
+•	The Within-Sum-of-Squares (WSS) approach is used for K-Means clustering with k = 2. The nstart parameter allows the algorithm to be performed numerous times with various initial centroids to prevent local minima. Within-cluster sum of squares by cluster = 43.3, 75.2, and between-cluster proportion (between_SS / total_SS) = 34.1%.
+
+•	The Silhouette approach is used for K-Means clustering with k = 5, providing a more detailed view of the cluster structure. nstart, like the WSS approach, is used to improve the robustness of the outcomes.Within-Cluster Sum of Squares (between_SS / total_SS = 65.4%): 12.79, 2.8, 15.595925, 21.879320, 9.284424 & Between-Cluster Proportion (between_SS / total_SS = 65.4%)
+
+Cluster Plot Visualizations:
+
+•	Using the wss approach, a cluster plot for K-Means findings with k = 2 creates two clusters of size 11 and 10.
+
+•	Using the Silhouette approach, a cluster plot for K-Means findings with k = 5 generates 5 clusters of size 3, 2, 8, 4, and 4.
+
+•	WSS - Cluster 1 and Cluster 2 appear to follow a trend in terms of pharmaceutical firm location. "US" is the location of more than half of the enterprises in both clusters. This also implies that the United implies has enterprises that are both lucrative to invest in (Acceptable Profitability with Moderate Risk) and firms that are not profitable (Low Profitability with High Risk). However, the better performing cluster, Cluster 1, appears to have a higher proportion of enterprises based in the United States.
+
+•	silhouette - In the silhouette clusters, we can see the same level of pattern towards the place that we saw in the wss. Every cluster in here has a higher proportion of its locations in "US" than the other locations. However, it is important to see that the best cluster that truly characterizes the domain, Cluster 4, has a higher proportion of US enterprises and a lower proportion of non-US based companies.
+
+Exchange:
+
+WSS - There are 21 companies overall, divided into 1 Amex, 1 Nasdaq, and 19 NYSE. Cluster 1 just has the NYSE. All three are in Cluster 2.
+
+silhouette - There are 21 companies overall, divided into 1 Amex, 1 Nasdaq, and 19 NYSE. All three are in Cluster 3. clusters 1,2,4,5 all contains only NYSE.
+
+3. Location
+
+WSS – 
+
+1. Acceptable Profitability with Moderate Risk
+
+2. Low Profitability with High Risk:
+
+Silhouette-
+
+1. Emerging Group
+
+2. Overvalued and High-Risk Investment Group
+
+3. High-Risk Investment
+
+4. Promising Value opportunity Group
+
+5. Prime Investment with Slighter Risk Group
+
+
+***
+
+```{r}
+#install.packages("factoextra")
+library("tidyverse") #loading library tidyverse for transforming data
+library("factoextra") #loading factoextra library for extracting and visualizing the data
+library("ggplot2")
+library("dplyr")
+library("esquisse")
+```
+
+
+#Loading and exploring the data
+```{r}
+Pharmaceuticals <- read.csv("Pharmaceuticals.csv")
+head(Pharmaceuticals)
+summary(Pharmaceuticals)
+```
+
+***
+
+#1. Use only the numerical variables (1 to 9) to cluster the 21 firms. Justify the various choices made in conducting the cluster analysis, such as weights for different variables, the specific clustering algorithm(s) used, the number of clusters formed, and so on.
+
+# Removing missing data and rescale variables for comparability before clustering data.
+
+```{r}
+colMeans(is.na(Pharmaceuticals))
+```
+
+# Performing z-score scaling Normalization
+
+```{r}
+set.seed(1)
+data.n <- scale(Pharmaceuticals[,-c(1:2,12:14)])
+```
+
+# calculating the distance of the scaled pharmaceuticals data
+```{r}
+Distance <- dist(data.n, method = "euclidian")
+# visualizing the distance between rows of the distance matrix
+fviz_dist(Distance)
+```
+
+# Finding optimal K using wss method
+# Determining the no of clusters to do the cluster analysis using Elbow Method
+
+```{r}
+wss <- fviz_nbclust(data.n,kmeans,method="wss")
+wss
+```
+
+Here in this plot we can clearly see that the graph is forming an elbow shape at 2, The optimal number of clusters (k) determined through the Within-Sum-of-Squares (WSS) method is 2.
+
+# Finding optimal K using silhouette method
+# Using Silhouette method for determining no of clusters
+
+```{r}
+silhouette_k <- fviz_nbclust(data.n,kmeans,method="silhouette")
+silhouette_k
+```
+
+The optimal number of clusters (k) determined through the silhouette method is 5.
+
+***
+
+#2.1 Interpret the clusters with respect to the numerical variables used in forming the clusters.
+
+
+# Formulation of clusters using K-Means with k = 2 (WSS)
+
+```{r}
+wss_kmeans <- kmeans(data.n,centers = 2,nstart=25)
+wss_kmeans
+```
+
+# Formulation of clusters using K-Means with k = 5 (Silhouette)
+
+```{r}
+silhouette_kmeans <- kmeans(data.n,centers=5,nstart=25)
+silhouette_kmeans
+```
+
+# Cluster Plot Visualizations for k=2 (WSS)
+```{r}
+fviz_cluster(wss_kmeans,Pharmaceuticals[,-c(1:2,12:15)],main="Cluster_WSS")
+```
+By employing the WSS Method we get 2 clusters of size 11 and 10.
+
+
+# Cluster Plot Visualizations for k=5 (Silhouette)
+```{r}
+fviz_cluster(silhouette_kmeans,Pharmaceuticals[,-c(1:2,12:15)],main="Cluster_Silhouette")
+```
+By employing the Silhouette Method we get 5 clusters of size 3, 2, 8, 4 and 4.
+
+#2.2 Is there a pattern in the clusters with respect to the numerical variables (10 to 12)? (those not used in forming the clusters)
+
+# Binding the cluster assignment to the original data frame for analysis
+```{r}
+clusters_wss <- wss_kmeans$cluster
+clusters_silhouette <- silhouette_kmeans$cluster
+
+data.x <- cbind(Pharmaceuticals,clusters_wss)
+data.y <- cbind(Pharmaceuticals,clusters_silhouette)
+```
+
+# Aggregating the clusters to interpret the attributes - WSS
+```{r}
+intel_wss <- aggregate(data.x[,-c(1:2,12:14)],by=list(data.x$clusters_wss),FUN="median")
+print(intel_wss[,-1])
+```
+
+# Aggregating the clusters to interpret the attributes - Silhouette
+```{r}
+intel_silhouette <- aggregate(data.y[,-c(1:2,12:14)],by=list(data.y$clusters_silhouette),FUN="median")
+print(intel_silhouette[,-1])
+```
+# median calculation - WSS
+
+```{r}
+recommend_table1 <- table(data.x$cluster, data.x$Median_Recommendation)
+names(dimnames(recommend_table1)) <- c("Cluster", "Recommendation")
+recommend_table1 <- addmargins(recommend_table1)
+recommend_table1
+```
+
+One strong buy, seven moderate buys, nine holds, and four moderate sells make the total number of 21 recommendations. All four recommendations, including the opposite advice on buys and sells, are mixed together in Cluster 2. Only Hold Moderate, Buy Moderate & Sell Strong are found in cluster 1.
+
+# median calculation - Silhouette
+```{r}
+recommend_table2 <- table(data.y$cluster, data.y$Median_Recommendation)
+names(dimnames(recommend_table2)) <- c("Cluster", "Recommendation")
+recommend_table2 <- addmargins(recommend_table2)
+recommend_table2
+```
+One strong buy, seven moderate buys, nine holds, and four moderate sells make the total number of 21 recommendations. All four recommendations, including the opposite advice on buys and sells, are mixed together in Cluster 5. Only mod purchase and hold information can be found in Clusters 1, 2, and 3.Both a moderate buy and moderate sell recommendation are present for Cluster 4.
+
+# Location of firm headquarter's breakdown of clusters based on the mergeddata - wss
+```{r}
+location_table <- table(data.x$cluster, data.x$Location)
+names(dimnames(location_table)) <- c("Cluster", "Location")
+location_table <- addmargins(location_table)
+location_table
+```
+There are 21 firms in all, with 13 in the US, 3 in the UK, and 1 each in Canada, France, Germany, Ireland, and Switzerland. US, UK, and Switzerland are all featured in Cluster 2.Switzerland, Uk And Us are in Cluster 1. Expect Switzerland Remaining All Countries are in Cluster 2. 
+
+# Location of firm headquarter's breakdown of clusters based on the mergeddata - Silhouette
+
+```{r}
+location_table <- table(data.y$cluster, data.y$Location)
+names(dimnames(location_table)) <- c("Cluster", "Location")
+location_table <- addmargins(location_table)
+location_table
+```
+
+There are 21 firms in all, with 13 in the US, 3 in the UK, and 1 each in Canada, France, Germany, Ireland, and Switzerland. US, UK, and Switzerland are all featured in Cluster 5. Germany and the US are in Cluster 2. US and Canada are in Cluster 1. US and Britain are in Cluster 3. The US, France, and Ireland make up Cluster 4.
+
+# Pattern in the categorical variables - wss
+```{r}
+ggplot(data.x,aes(x=clusters_wss,fill=Location)) + geom_bar()
+```
+
+
+Cluster 1 and Cluster 2 seems to have a pattern with respect to the location of the pharmaceutical firms. More than 50% of the firms across both the clusters have "US" as their location. This also states that US has firms which are both profitable to invest (Acceptable Profitability with Moderate Risk) as well as firms which don't yield that good profits (Low Profitability with High Risk). But comparatively the better performing cluster i.e. Cluster 1 seems to have a greater ratio of companies based in US.
+
+# Pattern in the categorical variables - silhouette
+
+```{r}
+ggplot(data.y,aes(x=clusters_silhouette,fill=Location)) + geom_bar()
+```
+
+
+In the silhouette clusters we get to see the see the similar level of pattern towards to the location as observed in the wss. Every cluster in here as more of it's locations in "US" when compared to that with the other locations. But it seems interesting to observe that the best cluster which defines the domain with true sense i.e. Cluster 4 has a greater ratio of US companies with a lesser ratio of Non - US based companies.
+
+*Note: The patterns therefore obtained in each of the clustering methods are generic, this is mostly because of the less amount of data which didn't give any further scope to visualize the categorical attributes.
+
+
+```{r}
+exchange_table <- table(data.x$cluster, data.x$Exchange)
+names(dimnames(exchange_table)) <- c("Cluster", "Exchange")
+exchange_table <- addmargins(exchange_table)
+exchange_table
+```
+There are 21 companies overall, divided into 1 Amex, 1 Nasdaq, and 19 NYSE. Cluster 1 just has the NYSE. All three are in Cluster 2.
+
+#summarizing the stock exchange values for each cluster - silhouette
+
+```{r}
+exchange_table <- table(data.y$cluster, data.y$Exchange)
+names(dimnames(exchange_table)) <- c("Cluster", "Exchange")
+exchange_table <- addmargins(exchange_table)
+exchange_table
+```
+
+There are 21 companies overall, divided into 1 Amex, 1 Nasdaq, and 19 NYSE. All three are in Cluster 3. clusters 1,2,4,5 all contains only NYSE.
+
+***
+
+#3. Provide an appropriate name for each cluster using any or all of the variables in the dataset.
+
+
+Interpretation:(WSS)
+
+Note: The interpretation is solely based on the financial characteristics of the specified firms in each of the clusters; as a result, the interpretation obtained would assist a person in deciding which of the two clusters to invest in order to benefit.
+
+A) Acceptable Profitability with Moderate Risk:
+
+The first cluster acquired here is an excellent investment due to its high likelihood of success. Success is measured using the criteria "Market Capital", ROE - Return on Expenditure, ROA - Return on Assets, Asset Turnover, and Net Profit Margin. The capital value in this cluster is 73.84, ROE, which indicates the returns on investment, is high (31), and ROA, which indicates the returns a corporation expects to earn on assets, is also high (15). Likewise, asset turnover and net profit are high.The PE Ratio is lower in the second cluster, indicating that the company is fairly valued with no disparities in share prices.
+
+The level of risk in this investment is low which is called out by the "Beta" value, generally beta value should be lower than 1 in this case it is 0.46 which refers that the variability in these firms would be moderate not having enough of fluctuations.Also the "Leverage" value, which refers to a firm having borrowed capital for an investment should be as less as possible because market is always unpredictable and there would be possibilities of a firm loosing the money which they have borrowed for an investment expecting profits in return. Here the leverage value is 0.28 which is comparatively less to the second cluster. "With a good investment there should be very little chance of losing the total amount invested" and the group of firms in this cluster are expressing higher success rate when compared to that with the second cluster.
+
+
+B) Low Profitability with High Risk:
+
+When compared to the first cluster, the second cluster has poor performance metrics; the market capital is very low, at 4.78, compared to 73.84 in the first cluster, indicating that the firms listed in this cluster have a lower market share. Return on Expenditure (ROE), Return on Assets (ROA), Asset Turnover, and Net Profit Margin all have decreased. In these firms, the amount of risk indicated by the Beta and Leverage values is high, implying that there is significant variability and borrowing in comparison to the first cluster. 
+
+
+Interpretation:(silhouette)
+
+A) Emerging Group
+
+The First Cluster struggles to provide returns on expenditure, which is essentially the value that any investor would seek as a return on investment. External borrowings are also high, with a high degree of variability in the firms (beta). It also has the lowest capital value among all groups, and it is amusing to note that the revenue across these firms is also the highest. This could be because the firms were founded recently and are settling in to begin their journey in the market.
+
+B) Overvalued and High-Risk Investment Group
+
+The Second Cluster is most likely similar to the "High-Risk Investment Group". It appears to have a high degree of variability in its PE Ratio, which is the ratio of share price to company value, indicating that it is likely overvalued. The beta and leverage values are also high, indicating that there is additional risk in this group. This cannot be a wise investment decision.
+
+C) High-Risk Investment Group
+
+The third Cluster is a highly volatile cluster with higher beta (firm variability) and leverage (outside borrowings) values, indicating that these firms have a high sense of risk. Furthermore, the market capitalization and net profit margin are lower, making it less suitable for any potential investments.
+
+D) Promising Value opportunity Group
+
+The fourth Cluster can be defined as a group of firms with viable market capital that are properly valued (PE Ratio) and involve moderate risk (Beta and Leverage). It also has higher returns on investment and assets with a profitable tendency.Despite the fact that the capital value is lower when compared to the fourth cluster, there is a possibility that the valuation will change/rise in the future.
+
+E) Prime Investment with Slighter Risk Group
+
+The Fifth Cluster is a good source of investment for any discrete individual who want to set a beneficial pitch for him/her. Here in this cluster as we see when compared to other firms across various clusters, the fourth cluster is having the "Highest Market Capital" of "153.245", "Lofty ROE - Return on Expenditure of "43.10" & ROA - Return on Assets of "17.75", "Sky-Spiking Asset Turnover" of "0.95" and "Net Profit Margin" of "19.5". It also has a "decent beta value" - indicating that the variance would be less and no much of risk would be involved and not only that it has "less leverage value" - which refers stating that the borrowed capital for future investments is small. PE Ratio is less indicating that the price to earnings ratio (share price to company value) is manageable indicating that the company is properly valued. If anyone wants to invest in a company which has a higher capital ratio and moderate risk with fewer liabilities then the firms which are part of this cluster make the best choice.
+
+Conclusion:
+
+Any investment can be divided into three categories based on three criteria: security, income, and capital growth. Every investor must choose an appropriate combination of these three factors.
+
+The "profit to loss ratio" is always a constraint on investment; every individual would want to maximize their profit while incurring the least amount of loss or incurring no loss at all. In this case, the supplied data set's cluster titled "Prime Investment with Slighter Risk" demonstrates all of these characteristics. Based on my research and interpretation, I believe this is the best cluster to invest in because there is less risk and more earnings.
+
+Note: The reason for choosing a cluster from the silhouette approach is that it helps in better defining the domain, which can be used by anyone to make an informed decision about their investment choices.
+
+***
